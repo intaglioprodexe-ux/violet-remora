@@ -1,0 +1,14 @@
+node_modules/
+.env
+
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+
+*.xlsx
+*.xls
+
+job_history_2023_2025.sqlite
+live_migration/data/output/live_schedule.sqlite
+live_migration/reports/
+runtime_data/

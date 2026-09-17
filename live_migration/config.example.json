@@ -1,0 +1,10 @@
+{
+  "source": "\\\\192.168.0.254\\Public\\PRINTING SCHEDULE 2026B.xlsx",
+  "sheet": "LISTING 2025 & 2026",
+  "header_row": 2,
+  "database": "data/output/live_schedule.sqlite",
+  "reports_directory": "reports",
+  "minimum_valid_rows": 1000,
+  "maximum_drop_percent": 50
+}
+
