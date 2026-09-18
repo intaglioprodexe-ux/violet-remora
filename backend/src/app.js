@@ -1,4 +1,5 @@
 const crypto = require("node:crypto");
+const path = require("node:path");
 const express = require("express");
 
 const { createHistoryRouter } = require("./routes/history.routes");
@@ -49,18 +50,33 @@ function sendError(res, status, code, message, requestId) {
   });
 }
 
-function createApp({ config, historyDatabase }) {
+function createApp({ config, historyDatabase, liveScheduleDatabase }) {
   const app = express();
+  const projectRoot = path.resolve(__dirname, "../..");
+  const frontendSourceRoot = path.join(projectRoot, "src");
+  const frontendIndexPath = path.join(projectRoot, "index.html");
 
   app.disable("x-powered-by");
   app.use(addRequestId);
   app.use(addConfiguredCors(config.frontendOrigin));
   app.use(express.json({ limit: "1mb" }));
 
+  app.get("/", (req, res, next) => {
+    res.sendFile(frontendIndexPath, (error) => {
+      if (error) {
+        next(error);
+      }
+    });
+  });
+
+  app.use("/src", express.static(frontendSourceRoot));
+
   app.get("/api/v1/health", (req, res, next) => {
     try {
       const connected = pingHistoryDatabase(historyDatabase);
+      const liveConnected = pingHistoryDatabase(liveScheduleDatabase);
       const objects = connected ? listHistoryObjects(historyDatabase) : [];
+      const liveObjects = liveConnected ? listHistoryObjects(liveScheduleDatabase) : [];
 
       res.json({
         data: {
@@ -69,6 +85,11 @@ function createApp({ config, historyDatabase }) {
             connected,
             read_only: true,
             object_count: objects.length
+          },
+          live_schedule_database: {
+            connected: liveConnected,
+            read_only: true,
+            object_count: liveObjects.length
           }
         },
         meta: {
@@ -84,10 +105,19 @@ function createApp({ config, historyDatabase }) {
     "/api/v1/history",
     createHistoryRouter({
       database: historyDatabase,
+      liveScheduleDatabase,
       schemaInspectionToken: config.schemaInspectionToken,
       nodeEnv: config.nodeEnv
     })
   );
+
+  app.get(/^\/(?!api(?:\/|$)).*/, (req, res, next) => {
+    res.sendFile(frontendIndexPath, (error) => {
+      if (error) {
+        next(error);
+      }
+    });
+  });
 
   app.use((req, res) => {
     sendError(

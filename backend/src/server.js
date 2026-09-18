@@ -1,19 +1,23 @@
 const { config } = require("./config");
 const {
   closeHistoryDatabase,
+  openLiveScheduleDatabase,
   openHistoryDatabase
 } = require("./db/history-db");
 const { createApp } = require("./app");
 
 let historyDatabase;
+let liveScheduleDatabase;
 let server;
 
 function start() {
   try {
     historyDatabase = openHistoryDatabase(config.historyDbPath);
+    liveScheduleDatabase = openLiveScheduleDatabase(config.liveScheduleDbPath);
   } catch (error) {
     console.error("Could not open the history SQLite database.");
     console.error(`Configured path: ${config.historyDbPath}`);
+    console.error(`Live schedule path: ${config.liveScheduleDbPath}`);
     console.error(error.message);
     process.exitCode = 1;
     return;
@@ -21,7 +25,8 @@ function start() {
 
   const app = createApp({
     config,
-    historyDatabase
+    historyDatabase,
+    liveScheduleDatabase
   });
 
   server = app.listen(config.port, config.host, () => {
@@ -41,6 +46,7 @@ function shutdown(signal) {
 
   const finish = () => {
     closeHistoryDatabase(historyDatabase);
+    closeHistoryDatabase(liveScheduleDatabase);
     process.exit(0);
   };
 

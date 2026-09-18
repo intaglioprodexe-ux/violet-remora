@@ -1,6 +1,6 @@
 const { DatabaseSync } = require("node:sqlite");
 
-function openHistoryDatabase(databasePath) {
+function openReadOnlyDatabase(databasePath) {
   if (!databasePath) {
     throw new Error("A history SQLite database path is required.");
   }
@@ -16,6 +16,14 @@ function openHistoryDatabase(databasePath) {
   database.exec("PRAGMA busy_timeout = 5000;");
 
   return database;
+}
+
+function openHistoryDatabase(databasePath) {
+  return openReadOnlyDatabase(databasePath);
+}
+
+function openLiveScheduleDatabase(databasePath) {
+  return openReadOnlyDatabase(databasePath);
 }
 
 function pingHistoryDatabase(database) {
@@ -149,6 +157,100 @@ function searchHistoryJobs(database, search, limit, offset) {
     );
 }
 
+function searchLookupJobs(database, search, limit) {
+  const normalizedSearch = String(search || "").trim();
+  const searchPattern = `%${normalizedSearch}%`;
+
+  const baseSql = `
+    SELECT
+      id,
+      jobcard_raw,
+      jobcard_normalized,
+      jobcard_last4,
+      product_code,
+      customer_name,
+      product_name,
+      order_qty,
+      meter_run,
+      status,
+      printing_machine,
+      printing_date,
+      source_file,
+      source_sheet,
+      source_row,
+      imported_at_utc
+    FROM live_job_lookup
+  `;
+
+  if (!normalizedSearch) {
+    return database
+      .prepare(`${baseSql} ORDER BY id DESC LIMIT ?`)
+      .all(limit);
+  }
+
+  return database
+    .prepare(
+      `${baseSql}
+       WHERE jobcard_last4 LIKE ?
+          OR jobcard_normalized LIKE ?
+          OR jobcard_raw LIKE ?
+          OR product_code LIKE ?
+          OR customer_name LIKE ?
+          OR product_name LIKE ?
+       ORDER BY
+         CASE WHEN jobcard_last4 = ? THEN 0 ELSE 1 END,
+         id DESC
+       LIMIT ?`
+    )
+    .all(
+      searchPattern,
+      searchPattern,
+      searchPattern,
+      searchPattern,
+      searchPattern,
+      searchPattern,
+      normalizedSearch,
+      limit
+    );
+}
+
+function searchCombinedJobs(historyDatabase, liveDatabase, search, limit, offset) {
+  const fetchLimit = Math.min(Math.max(limit + offset, 1), 200);
+  const liveRows = searchLookupJobs(liveDatabase, search, fetchLimit).map((row) => ({
+    ...row,
+    source: "live_schedule"
+  }));
+  const historyRows = searchHistoryJobs(historyDatabase, search, fetchLimit, 0).map(
+    (row) => ({
+      ...row,
+      source: "history"
+    })
+  );
+
+  const liveJobKeys = new Set(
+    liveRows
+      .map((row) => row.jobcard_normalized)
+      .filter((value) => value)
+  );
+
+  const combined = [
+    ...liveRows,
+    ...historyRows.filter(
+      (row) => !row.jobcard_normalized || !liveJobKeys.has(row.jobcard_normalized)
+    )
+  ];
+
+  combined.sort((left, right) => {
+    if (left.source !== right.source) {
+      return left.source === "live_schedule" ? -1 : 1;
+    }
+
+    return Number(right.id || 0) - Number(left.id || 0);
+  });
+
+  return combined.slice(offset, offset + limit);
+}
+
 function closeHistoryDatabase(database) {
   if (database) {
     database.close();
@@ -159,7 +261,9 @@ module.exports = {
   closeHistoryDatabase,
   getHistorySchema,
   listHistoryObjects,
+  openLiveScheduleDatabase,
   openHistoryDatabase,
   pingHistoryDatabase,
+  searchCombinedJobs,
   searchHistoryJobs
 };

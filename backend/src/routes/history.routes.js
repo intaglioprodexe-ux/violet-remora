@@ -4,7 +4,7 @@ const {
   getHistorySchema,
   listHistoryObjects,
   pingHistoryDatabase,
-  searchHistoryJobs
+  searchCombinedJobs
 } = require("../db/history-db");
 
 function errorResponse(res, status, code, message, requestId) {
@@ -50,7 +50,12 @@ function createInspectionGuard({ token, nodeEnv }) {
   };
 }
 
-function createHistoryRouter({ database, schemaInspectionToken, nodeEnv }) {
+function createHistoryRouter({
+  database,
+  liveScheduleDatabase,
+  schemaInspectionToken,
+  nodeEnv
+}) {
   const router = express.Router();
   const inspectionGuard = createInspectionGuard({
     token: schemaInspectionToken,
@@ -103,7 +108,13 @@ function createHistoryRouter({ database, schemaInspectionToken, nodeEnv }) {
         return;
       }
 
-      const jobs = searchHistoryJobs(database, search, limit, offset);
+      const jobs = searchCombinedJobs(
+        database,
+        liveScheduleDatabase,
+        search,
+        limit,
+        offset
+      );
 
       res.json({
         data: jobs,
