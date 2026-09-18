@@ -3,6 +3,7 @@ const path = require("node:path");
 const express = require("express");
 
 const { createHistoryRouter } = require("./routes/history.routes");
+const { createMasterlistRouter } = require("./routes/masterlist.routes");
 const { listHistoryObjects, pingHistoryDatabase } = require("./db/history-db");
 
 function createRequestId() {
@@ -50,7 +51,12 @@ function sendError(res, status, code, message, requestId) {
   });
 }
 
-function createApp({ config, historyDatabase, liveScheduleDatabase }) {
+function createApp({
+  config,
+  historyDatabase,
+  liveScheduleDatabase,
+  masterlistDatabase
+}) {
   const app = express();
   const projectRoot = path.resolve(__dirname, "../..");
   const frontendSourceRoot = path.join(projectRoot, "src");
@@ -75,8 +81,12 @@ function createApp({ config, historyDatabase, liveScheduleDatabase }) {
     try {
       const connected = pingHistoryDatabase(historyDatabase);
       const liveConnected = pingHistoryDatabase(liveScheduleDatabase);
+      const masterlistConnected = pingHistoryDatabase(masterlistDatabase);
       const objects = connected ? listHistoryObjects(historyDatabase) : [];
       const liveObjects = liveConnected ? listHistoryObjects(liveScheduleDatabase) : [];
+      const masterlistObjects = masterlistConnected
+        ? listHistoryObjects(masterlistDatabase)
+        : [];
 
       res.json({
         data: {
@@ -90,6 +100,11 @@ function createApp({ config, historyDatabase, liveScheduleDatabase }) {
             connected: liveConnected,
             read_only: true,
             object_count: liveObjects.length
+          },
+          masterlist_database: {
+            connected: masterlistConnected,
+            read_only: true,
+            object_count: masterlistObjects.length
           }
         },
         meta: {
@@ -109,6 +124,11 @@ function createApp({ config, historyDatabase, liveScheduleDatabase }) {
       schemaInspectionToken: config.schemaInspectionToken,
       nodeEnv: config.nodeEnv
     })
+  );
+
+  app.use(
+    "/api/v1/masterlist",
+    createMasterlistRouter({ database: masterlistDatabase })
   );
 
   app.get(/^\/(?!api(?:\/|$)).*/, (req, res, next) => {

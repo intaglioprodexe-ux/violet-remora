@@ -26,6 +26,10 @@ function openLiveScheduleDatabase(databasePath) {
   return openReadOnlyDatabase(databasePath);
 }
 
+function openMasterlistDatabase(databasePath) {
+  return openReadOnlyDatabase(databasePath);
+}
+
 function pingHistoryDatabase(database) {
   const row = database.prepare("SELECT 1 AS ok").get();
   return row && row.ok === 1;
@@ -262,6 +266,7 @@ module.exports = {
   getHistorySchema,
   listHistoryObjects,
   openLiveScheduleDatabase,
+  openMasterlistDatabase,
   openHistoryDatabase,
   pingHistoryDatabase,
   searchCombinedJobs,

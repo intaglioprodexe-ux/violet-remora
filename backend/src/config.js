@@ -5,6 +5,10 @@ const DEFAULT_LIVE_SCHEDULE_DB_PATH = path.resolve(
   __dirname,
   "../../live_migration/data/output/live_schedule.sqlite"
 );
+const DEFAULT_MASTERLIST_DB_PATH = path.resolve(
+  __dirname,
+  "../../masterlist_migration/data/output/masterlist.sqlite"
+);
 
 function readPort(value) {
   const port = Number(value || 3000);
@@ -23,6 +27,8 @@ const config = {
   historyDbPath: process.env.HISTORY_DB_PATH || DEFAULT_HISTORY_DB_PATH,
   liveScheduleDbPath:
     process.env.LIVE_SCHEDULE_DB_PATH || DEFAULT_LIVE_SCHEDULE_DB_PATH,
+  masterlistDbPath:
+    process.env.MASTERLIST_DB_PATH || DEFAULT_MASTERLIST_DB_PATH,
   schemaInspectionToken: process.env.SCHEMA_INSPECTION_TOKEN || "",
   frontendOrigin: process.env.FRONTEND_ORIGIN || ""
 };
@@ -30,5 +36,6 @@ const config = {
 module.exports = {
   config,
   DEFAULT_HISTORY_DB_PATH,
-  DEFAULT_LIVE_SCHEDULE_DB_PATH
+  DEFAULT_LIVE_SCHEDULE_DB_PATH,
+  DEFAULT_MASTERLIST_DB_PATH
 };

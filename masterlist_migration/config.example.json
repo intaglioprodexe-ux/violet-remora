@@ -1,0 +1,11 @@
+{
+  "source_file": "\\\\192.168.0.254\\Sales Admin\\MASTERLIST\\MASTERLIST_WITH STICKERS_2026D-FINAL.xlsm",
+  "database_path": "%LOCALAPPDATA%\\ITG-Production\\data\\masterlist.sqlite",
+  "worksheet": "MASTERLIST",
+  "table": "tbl_SourceMasterlist",
+  "minimum_source_rows": 1000,
+  "minimum_loaded_ratio": 0.9,
+  "retention_batches": 7,
+  "summary_report": "reports/masterlist_import_summary.json",
+  "rejection_report": "reports/masterlist_import_rejections.csv"
+}
