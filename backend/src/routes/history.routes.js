@@ -3,7 +3,8 @@ const express = require("express");
 const {
   getHistorySchema,
   listHistoryObjects,
-  pingHistoryDatabase
+  pingHistoryDatabase,
+  searchHistoryJobs
 } = require("../db/history-db");
 
 function errorResponse(res, status, code, message, requestId) {
@@ -67,6 +68,51 @@ function createHistoryRouter({ database, schemaInspectionToken, nodeEnv }) {
         },
         meta: {
           request_id: req.requestId
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  router.get("/jobs", (req, res, next) => {
+    try {
+      const search = String(req.query.search || "").trim();
+      const limit = Number(req.query.limit || 25);
+      const offset = Number(req.query.offset || 0);
+
+      if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+        errorResponse(
+          res,
+          422,
+          "INVALID_LIMIT",
+          "The limit must be an integer between 1 and 100.",
+          req.requestId
+        );
+        return;
+      }
+
+      if (!Number.isInteger(offset) || offset < 0) {
+        errorResponse(
+          res,
+          422,
+          "INVALID_OFFSET",
+          "The offset must be a non-negative integer.",
+          req.requestId
+        );
+        return;
+      }
+
+      const jobs = searchHistoryJobs(database, search, limit, offset);
+
+      res.json({
+        data: jobs,
+        meta: {
+          request_id: req.requestId,
+          search,
+          limit,
+          offset,
+          count: jobs.length
         }
       });
     } catch (error) {

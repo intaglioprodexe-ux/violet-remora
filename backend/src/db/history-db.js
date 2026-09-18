@@ -69,6 +69,86 @@ function getHistorySchema(database) {
   }));
 }
 
+function searchHistoryJobs(database, search, limit, offset) {
+  const normalizedSearch = String(search || "").trim();
+  const safeLimit = Math.min(Math.max(Number(limit) || 25, 1), 100);
+  const safeOffset = Math.max(Number(offset) || 0, 0);
+
+  if (!normalizedSearch) {
+    return database
+      .prepare(
+        `
+          SELECT
+            id,
+            jobcard_raw,
+            jobcard_normalized,
+            jobcard_last4,
+            product_code,
+            customer_name,
+            product_name,
+            order_qty,
+            meter_run,
+            status,
+            printing_machine,
+            printing_date,
+            source_file,
+            source_sheet,
+            source_row
+          FROM job_history_lookup
+          ORDER BY id DESC
+          LIMIT ? OFFSET ?
+        `
+      )
+      .all(safeLimit, safeOffset);
+  }
+
+  const searchPattern = `%${normalizedSearch}%`;
+
+  return database
+    .prepare(
+      `
+        SELECT
+          id,
+          jobcard_raw,
+          jobcard_normalized,
+          jobcard_last4,
+          product_code,
+          customer_name,
+          product_name,
+          order_qty,
+          meter_run,
+          status,
+          printing_machine,
+          printing_date,
+          source_file,
+          source_sheet,
+          source_row
+        FROM job_history_lookup
+        WHERE jobcard_last4 LIKE ?
+           OR jobcard_normalized LIKE ?
+           OR jobcard_raw LIKE ?
+           OR product_code LIKE ?
+           OR customer_name LIKE ?
+           OR product_name LIKE ?
+        ORDER BY
+          CASE WHEN jobcard_last4 = ? THEN 0 ELSE 1 END,
+          id DESC
+        LIMIT ? OFFSET ?
+      `
+    )
+    .all(
+      searchPattern,
+      searchPattern,
+      searchPattern,
+      searchPattern,
+      searchPattern,
+      searchPattern,
+      normalizedSearch,
+      safeLimit,
+      safeOffset
+    );
+}
+
 function closeHistoryDatabase(database) {
   if (database) {
     database.close();
@@ -80,5 +160,6 @@ module.exports = {
   getHistorySchema,
   listHistoryObjects,
   openHistoryDatabase,
-  pingHistoryDatabase
+  pingHistoryDatabase,
+  searchHistoryJobs
 };
