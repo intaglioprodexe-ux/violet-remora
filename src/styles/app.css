@@ -36,6 +36,154 @@ body {
     background: var(--page-background);
 }
 
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.app-sidebar {
+    display: flex;
+    width: 248px;
+    flex: 0 0 248px;
+    flex-direction: column;
+    padding: 24px 14px 18px;
+    color: #eaf0ff;
+    background: #17233f;
+}
+
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 0 10px 28px;
+}
+
+.app-brand__mark {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border-radius: 10px;
+    color: #17233f;
+    background: #b9c9ff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+.app-brand__name,
+.app-brand__subtitle {
+    display: block;
+}
+
+.app-brand__name {
+    font-size: 0.95rem;
+}
+
+.app-brand__subtitle {
+    margin-top: 3px;
+    color: #aab8d7;
+    font-size: 0.74rem;
+}
+
+.app-navigation {
+    display: grid;
+    gap: 4px;
+}
+
+.app-navigation__label {
+    margin: 0 10px 8px;
+    color: #8f9fbe;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.app-navigation__link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    color: #c9d4eb;
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.app-navigation__link:hover {
+    color: #ffffff;
+    background: rgba(185, 201, 255, 0.11);
+}
+
+.app-navigation__link--active {
+    color: #ffffff;
+    background: #3656a7;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+}
+
+.app-navigation__indicator {
+    width: 7px;
+    height: 7px;
+    border: 1px solid #8fa4d8;
+    border-radius: 50%;
+}
+
+.app-navigation__link--active .app-navigation__indicator {
+    border-color: #ffffff;
+    background: #ffffff;
+}
+
+.app-sidebar__footer {
+    display: grid;
+    gap: 4px;
+    margin-top: auto;
+    padding: 16px 10px 0;
+    border-top: 1px solid rgba(201, 212, 235, 0.14);
+}
+
+.app-sidebar__footer-label {
+    color: #8f9fbe;
+    font-size: 0.72rem;
+}
+
+.app-sidebar__footer-value {
+    color: #dce6ff;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.app-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.app-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 56px;
+    padding: 0 30px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted-ink);
+    background: #ffffff;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.app-topbar__status {
+    color: #227344;
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+
+.app-content__body {
+    min-width: 0;
+}
+
 button,
 input {
     font: inherit;
@@ -214,7 +362,8 @@ h1 {
     border-top: 1px solid var(--border);
 }
 
-.jobs-table {
+.jobs-table,
+.masterlist-table {
     width: 100%;
     min-width: 1040px;
     border-collapse: collapse;
@@ -222,13 +371,16 @@ h1 {
 }
 
 .jobs-table th,
-.jobs-table td {
+.jobs-table td,
+.masterlist-table th,
+.masterlist-table td {
     padding: 13px 16px;
     border-bottom: 1px solid var(--border);
     vertical-align: top;
 }
 
-.jobs-table th {
+.jobs-table th,
+.masterlist-table th {
     color: var(--muted-ink);
     background: #f8fafb;
     font-size: 0.74rem;
@@ -238,11 +390,13 @@ h1 {
     white-space: nowrap;
 }
 
-.jobs-table tbody tr:last-child td {
+.jobs-table tbody tr:last-child td,
+.masterlist-table tbody tr:last-child td {
     border-bottom: 0;
 }
 
-.jobs-table tbody tr:hover {
+.jobs-table tbody tr:hover,
+.masterlist-table tbody tr:hover {
     background: #fafcff;
 }
 
@@ -300,6 +454,32 @@ h1 {
 }
 
 @media (max-width: 700px) {
+    .app-shell {
+        display: block;
+    }
+
+    .app-sidebar {
+        width: 100%;
+        padding: 16px 12px 12px;
+    }
+
+    .app-brand {
+        padding-bottom: 16px;
+    }
+
+    .app-navigation {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .app-navigation__label,
+    .app-sidebar__footer {
+        display: none;
+    }
+
+    .app-topbar {
+        padding: 0 16px;
+    }
+
     .page-shell {
         width: min(100% - 24px, 1500px);
         padding-top: 24px;

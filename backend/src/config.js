@@ -1,13 +1,22 @@
 const path = require("node:path");
 
-const DEFAULT_HISTORY_DB_PATH = "\\\\192.168.0.254\\Public\\violet-remora\\job_history_2023_2025.sqlite";
+const LOCAL_DATA_ROOT = path.join(
+  process.env.LOCALAPPDATA || path.resolve(__dirname, "../../.local-data"),
+  "violet-remora",
+  "data"
+);
+
+const DEFAULT_HISTORY_DB_PATH = path.join(
+  LOCAL_DATA_ROOT,
+  "job_history_2023_2025.sqlite"
+);
 const DEFAULT_LIVE_SCHEDULE_DB_PATH = path.resolve(
-  __dirname,
-  "../../live_migration/data/output/live_schedule.sqlite"
+  LOCAL_DATA_ROOT,
+  "live_schedule.sqlite"
 );
 const DEFAULT_MASTERLIST_DB_PATH = path.resolve(
-  __dirname,
-  "../../masterlist_migration/data/output/masterlist.sqlite"
+  LOCAL_DATA_ROOT,
+  "masterlist.sqlite"
 );
 
 function readPort(value) {

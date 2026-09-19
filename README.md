@@ -2,7 +2,7 @@
 
 Violet Remora is a Vue-based production monitoring ERP proof of concept for Intaglio Production.
 
-The current application provides a read-only job-history lookup screen. It combines the static historical job database with the separately refreshed live 2026 schedule database and exposes the result through a small Express API.
+The current application provides read-only Job History and Masterlist screens. It combines the static historical job database with the separately refreshed live 2026 schedule database and exposes both those data sources through a small Express API.
 
 > Current status: proof of concept. Job/process/machine-run/output recording, authentication, roles, and the operational ERP database have not been implemented yet.
 
@@ -10,6 +10,8 @@ The current application provides a read-only job-history lookup screen. It combi
 
 - Vue 3 browser interface loaded from the CDN; no Vite installation is required.
 - Search by full job card, batch number, or final four digits.
+- Search the product masterlist by full or partial product code.
+- Navigate between Job History and Masterlist from the left navigation pane.
 - Read-only Express API on port `3000`.
 - Read-only access to:
   - historical job data from `job_history_2023_2025.sqlite`;
@@ -28,6 +30,7 @@ Browser
         ├── /api/v1/health
         ├── /api/v1/history/jobs
         ├── /api/v1/history/ping
+        ├── /api/v1/masterlist/items
         └── Read-only SQLite connections
               ├── Historical job history database
               └── Live schedule database
@@ -48,14 +51,19 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete runbook.
 | Path | Purpose |
 | --- | --- |
 | `index.html` | Browser entry point; loads Vue 3, the application stylesheet, and `src/main.js`. |
-| `src/main.js` | Creates the Vue application. |
-| `src/router.js` | Resolves the approved root page without adding a router package. |
+| `src/main.js` | Creates the Vue application and connects the navigation shell to browser history. |
+| `src/router.js` | Resolves `/` and `/masterlist` without adding a router package. |
+| `src/components/layout/AppShell.js` | Left navigation pane and shared application shell. |
 | `src/pages/JobsPage.js` | Composes the job search screen. |
+| `src/pages/MasterlistPage.js` | Composes the product masterlist search screen. |
 | `src/components/jobs/` | Search bar, result summary, and job table components. |
+| `src/components/masterlist/` | Masterlist result table component. |
 | `src/components/common/` | Reusable feedback component. |
 | `src/state/jobsStore.js` | Owns job rows, search state, loading state, errors, and stale-request protection. |
-| `src/services/` | API client and history service. |
+| `src/state/masterlistStore.js` | Owns masterlist items, search state, loading state, errors, and stale-request protection. |
+| `src/services/` | API client, history service, and masterlist service. |
 | `src/utils/jobFormatters.js` | Job table columns and display formatting. |
+| `src/utils/masterlistFormatters.js` | Masterlist table columns and display formatting. |
 | `src/styles/app.css` | Application styling and responsive layout. |
 | `backend/package.json` | Node.js backend dependencies and scripts. |
 | `backend/src/server.js` | Opens both databases and starts Express. |
@@ -63,6 +71,8 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete runbook.
 | `backend/src/config.js` | Environment-variable configuration and database defaults. |
 | `backend/src/db/history-db.js` | Read-only SQLite connections, schema inspection, and combined job lookup. |
 | `backend/src/routes/history.routes.js` | History API routes and schema-inspection guard. |
+| `backend/src/db/masterlist-db.js` | Read-only masterlist item search and product-field selection. |
+| `backend/src/routes/masterlist.routes.js` | Masterlist product-code lookup route. |
 | `live_migration/` | Workbook-to-live-SQLite importer, schema, reports, verification, and Python tests. |
 | `PAGE_GUIDE.md` | Approved page and route responsibilities. |
 | `COMPONENT_GUIDE.md` | Approved component and layer responsibilities. |
@@ -179,6 +189,17 @@ The returned job rows currently include fields such as:
 }
 ```
 
+### Masterlist lookup
+
+```text
+GET /api/v1/masterlist/items?product_code=P-1001
+```
+
+The lookup supports full or partial product-code matching. The endpoint
+requires `product_code` and returns a `data` array containing product,
+customer, dimension, film, weight, process-flag, and warning fields from the
+read-only masterlist database.
+
 ### Schema inspection
 
 ```text
@@ -199,6 +220,7 @@ Configuration is read from environment variables. Defaults are defined in `backe
 | `NODE_ENV` | `development` | Controls production schema-inspection protection. |
 | `HISTORY_DB_PATH` | `\\192.168.0.254\Public\violet-remora\job_history_2023_2025.sqlite` | Read-only historical job database. |
 | `LIVE_SCHEDULE_DB_PATH` | `live_migration/data/output/live_schedule.sqlite` relative to the repository | Read-only live schedule database generated by the importer. |
+| `MASTERLIST_DB_PATH` | `masterlist_migration/data/output/masterlist.sqlite` relative to the repository | Read-only product masterlist database. |
 | `FRONTEND_ORIGIN` | empty | Optional CORS origin for a separately served frontend. Same-origin Express serving is preferred. |
 | `SCHEMA_INSPECTION_TOKEN` | empty | Optional token required for `/tables` and `/schema` in production. Never commit it. |
 

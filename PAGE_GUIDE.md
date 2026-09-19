@@ -3,12 +3,14 @@
 | Route | Page | Responsibility | Data source |
 | --- | --- | --- | --- |
 | `/` | `src/pages/JobsPage.js` | Compose the job search form, result summary, feedback, and table. It does not contain fetch or database logic. | `src/state/jobsStore.js` |
+| `/masterlist` | `src/pages/MasterlistPage.js` | Compose the product-code search form, result summary, feedback, and masterlist table. It does not contain fetch or database logic. | `src/state/masterlistStore.js` |
 
 ## Page rules
 
-- The first proof-of-concept screen is intentionally one page.
-- The page route is `/` because the repository had no existing frontend route
-  to preserve.
+- The application shell provides the approved navigation items: `Job History`
+  and `Masterlist`.
+- `/` remains the existing Job History page and must retain its search behavior.
+- `/masterlist` is the first additional read-only reference page.
 - Add another route only when a separate user workflow is approved.
 - API calls belong in services, request state belongs in the store, and value
   formatting belongs in utilities.
@@ -17,12 +19,15 @@
 
 ## API dependency
 
-`JobsPage` currently expects the backend to provide:
+`JobsPage` expects the backend to provide:
 
 ```text
 GET /api/v1/history/jobs
 GET /api/v1/history/jobs?search=<full-job-card-or-final-four-digits>
 ```
 
-This endpoint is required for the page to show job rows. It is not present in
-the inspected backend commit yet.
+`MasterlistPage` expects the backend to provide:
+
+```text
+GET /api/v1/masterlist/items?product_code=<full-or-partial-product-code>
+```
